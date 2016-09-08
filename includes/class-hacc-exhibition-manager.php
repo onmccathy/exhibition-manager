@@ -187,11 +187,11 @@ class Hacc_Exhibition_Manager {
                 $this->loader->add_action( 'init', $tutor, 'create_post_type' );
                 
                 // Class Post type
-                $class = new Hacc_Exhibition_Manager_Class( $this->get_plugin_name(), $this->get_version() );
+                $class = new Hacc_Exhibition_Manager_Workshop( $this->get_plugin_name(), $this->get_version() );
                 $this->loader->add_filter( 'template_include', $class, 'get_template',11,1 );
                 $this->loader->add_action( 'init', $class, 'create_post_type' );
                 $this->loader->add_action( 'add_meta_boxes', $class, 'create_metabox' );
-                $this->loader->add_action( 'save_post_hacc_class', $class, 'save_meta_data',20 );
+                $this->loader->add_action( 'save_post_hacc_workshop', $class, 'save_meta_data',20 );
                 
                 // Artist Post type
                 $artist = new Hacc_Exhibition_Manager_Artist( $this->get_plugin_name(), $this->get_version() );
@@ -203,7 +203,12 @@ class Hacc_Exhibition_Manager {
                 $this->loader->add_filter( 'template_include', $programme, 'get_template',11,1);
                 $this->loader->add_action( 'init', $programme, 'create_post_type' );
                 
-                
+                                // Exhibition Post type
+                $exhibition = new Hacc_Exhibition_Manager_News( $this->get_plugin_name(), $this->get_version() );
+                $this->loader->add_filter( 'template_include', $exhibition, 'get_template',11,1 );
+                $this->loader->add_action( 'init', $exhibition, 'create_post_type' );
+                $this->loader->add_action( 'add_meta_boxes', $exhibition, 'create_metabox' );
+                $this->loader->add_action( 'save_post', $exhibition, 'save_meta_data',20 );
                 
        }
 

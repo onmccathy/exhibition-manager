@@ -14,15 +14,16 @@ class Hacc_Exhibition_Manager_Group {
     
     /* Declare fields and copnstants */
         const POST_TYPE         = 'hacc_group';
-        const SAVENONCE         = 'hacc_group_save_nonce';
-         const POST_TYPE_NAME    = 'Group';
-        const METABOX_TITLE     = 'Group Details';
-        const PARENT_POST_TYPE  = 'hacc_venue';
-        const START_TIME        = 'hacc_StartTime';
-        const END_TIME          = 'hacc_EndTime'; 
-        const DAY_OF_WEEK       = 'hacc_DayOfWeek';
-        const FREQUENCY         = 'hacc_Frequency';
-
+        const SAVENONCE             = 'hacc_group_save_nonce';
+         const POST_TYPE_NAME       = 'Group';
+        const METABOX_TITLE         = 'Group Details';
+        const PARENT_POST_TYPE      = 'hacc_venue';
+        const START_TIME            = 'hacc_StartTime';
+        const END_TIME              = 'hacc_EndTime'; 
+        const DAY_OF_WEEK           = 'hacc_DayOfWeek';
+        const FREQUENCY             = 'hacc_Frequency';
+        const CONVENOR              = 'hacc_Convenor';
+        const CONVENOR_PHONE_NUMBER = 'hacc_phone_number';
 	/**
 	 * The ID of this plugin.
 	 *
@@ -103,7 +104,7 @@ class Hacc_Exhibition_Manager_Group {
                 'hierarchical'              => false,
                 'has_archive'               => true,
                 'query_var'                 => true,
-                'taxonomies'                => array('post_tag'),
+                'taxonomies'                => array('category', 'post_tag'),
                 'capability_type'           => 'post',
                 'map_meta_cap'              => true,
                 'rewrite'                   => array(
@@ -115,7 +116,8 @@ class Hacc_Exhibition_Manager_Group {
                 'supports'                  => array(
                                     'title',
                                     'editor',
-                                    'thumbnail'
+                                    'thumbnail',
+                                    'excerpt',    
                 )
             );
             register_post_type(self::POST_TYPE, $args);
@@ -134,12 +136,16 @@ class Hacc_Exhibition_Manager_Group {
             
             global $post;
             
+            if(!isset($post)) {
+                return $template;
+            }
+            
             if ($post->post_type !== self::POST_TYPE) {
                 return $template;
             }
             
             return hacc_get_post_type_template(substr(self::POST_TYPE,5), $template);
-            return $template;
+
         }
         
         /**
@@ -166,7 +172,7 @@ class Hacc_Exhibition_Manager_Group {
             // get post metadata
             wp_nonce_field(basename(__FILE__),  self::SAVENONCE);
 
-            require_once plugin_dir_path( __FILE__ ) . 'partials/hacc-group-metabox.php';
+            require_once plugin_dir_path( __FILE__ ) . 'metaboxes/hacc-group-metabox.php';
  
             wp_reset_postdata(); 
             
@@ -202,31 +208,41 @@ class Hacc_Exhibition_Manager_Group {
                 );
                 // unhook , post and rehook function so it doesn't loop infinitely
                 // see Wordpress codex wp_update_post 
-                remove_action('save_post', array($this,'save_meta_data'),20);
+                remove_action('save_post_hacc_group', array($this,'save_meta_data'),20);
                 wp_update_post( $args );
-                add_action('save_post', array($this,'save_meta_data'),20);
+                add_action('save_post_hacc_group', array($this,'save_meta_data'),20);
                 
                
             }
             
             if (isset($_POST[self::START_TIME])) {
-                $time = strtotime(sanitize_text_field($_POST[self::START_TIME]));
+                $time = sanitize_text_field($_POST[self::START_TIME]);
                 update_post_meta($post_id, self::START_TIME, $time);
             }
             
             if (isset($_POST[self::END_TIME])) {
-                $time = strtotime(sanitize_text_field($_POST[self::END_TIME]));
+                $time = sanitize_text_field($_POST[self::END_TIME]);
                 update_post_meta($post_id, self::END_TIME, $time);
             }
             
             if (isset($_POST[self::DAY_OF_WEEK])) {
-                $time = sanitize_text_field($_POST[self::DAY_OF_WEEK]);
-                update_post_meta($post_id, self::DAY_OF_WEEK, $time);
+                $dayofWeek = sanitize_text_field($_POST[self::DAY_OF_WEEK]);
+                update_post_meta($post_id, self::DAY_OF_WEEK, $dayofWeek);
             }
             
             if (isset($_POST[self::FREQUENCY])) {
-                $time = sanitize_text_field($_POST[self::FREQUENCY]);
-                update_post_meta($post_id, self::FREQUENCY, $time);
+                $frequency = sanitize_text_field($_POST[self::FREQUENCY]);
+                update_post_meta($post_id, self::FREQUENCY, $frequency );
+            }
+            
+            if (isset($_POST[self::CONVENOR])) {
+                $convenor = sanitize_text_field($_POST[self::CONVENOR]);
+                update_post_meta($post_id, self::CONVENOR, $convenor );
+            }
+            
+            if (isset($_POST[self::CONVENOR_PHONE_NUMBER])) {
+                $phone = sanitize_text_field($_POST[self::CONVENOR_PHONE_NUMBER]);
+                update_post_meta($post_id, self::CONVENOR_PHONE_NUMBER, $phone );
             }
         }
 }

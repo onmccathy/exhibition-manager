@@ -4,31 +4,32 @@
  * and open the template in the editor.
  */
 jQuery(document).ready(function () {
-    jQuery('.hacc-start-date').datepicker({
-        dateFormat: 'yy-mm-dd',
+    jQuery('.hacc-start-date').flatpickr({
+        dateFormat: 'Y-m-d',
         changeMonth: true,
         changeYear: true,
         numberOfMonths: 2,
-        onSelect: function (selected) {
-          jQuery(".hacc-end-date").datepicker("option","minDate",selected)  
+        onChange: function (d) {
+            jQuery(".hacc-end-date").flatpickr().set("minDate", d.fp_incr(1));
         }
     }
     );
-    jQuery('.hacc-end-date').datepicker({
-        dateFormat: 'yy-mm-dd',
+    jQuery('.hacc-end-date').flatpickr({
+        dateFormat: 'Y-m-d',
         changeMonth: true,
         changeYear: true,
         numberOfMonths: 2,
-        onSelect: function (selected) {
-          jQuery(".hacc-start-date").datepicker("option","maxDate",selected)  
+        onChange: function (d) {
+               jQuery(".hacc-start-date").flatpickr().set("maxDate", d);
         }
+        
     }
     );
 });
 jQuery(document).ready(function () {
-    jQuery('.hacc-timepicker').timepicker({
-        'minTime': '7:00am',
-        'maxTime' : '10:30pm',
-        'durationTime' : '7.00am'
-        });
+    jQuery('.hacc-timepicker').flatpickr({
+        enableTime: true,
+        noCalendar: true,
+        minuteIncrement: 15,
+    });
 });

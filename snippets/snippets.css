@@ -1,0 +1,39 @@
+/* Fancy widget grid display */
+@media (max-width: 640px) {
+  
+  body.responsive .hacc-falshycontainer-loop .hacc-flashy-container {
+    width: 50%;
+  }
+}
+@media (max-width: 480px) {
+  
+  body.responsive .hacc-falshycontainer-loop .hacc-flashy-container {
+    float: none;
+    width: 100%;
+  }
+}
+.hacc-falshycontainer-loop {
+  zoom: 1;
+  margin: 0 -20px;
+}
+.hacc-falshycontainer-loop:before {
+  content: '';
+  display: block;
+}
+.hacc-falshycontainer-loop:after {
+  content: '';
+  display: table;
+  clear: both;
+}
+.hacc-falshycontainer-loop .hacc-flashy-container {
+  width: 33.333%;
+  float: left;
+  clear: none;
+}
+
+.hacc-falshycontainer-loop .clear {
+  clear: both;
+}
+
+
+

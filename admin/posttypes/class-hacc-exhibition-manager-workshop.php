@@ -10,18 +10,30 @@
  */
 
 
-class Hacc_Exhibition_Manager_Exhibition {
+class Hacc_Exhibition_Manager_Workshop {
     
     /* Declare fields and copnstants */
        
-        const POST_TYPE         = 'hacc_exhibition';
-        const POST_TYPE_NAME    = 'Exhibition';
-        const SAVENONCE         = 'hacc_exhibition_save_nonce';
-        const METABOX_TITLE     = 'Exhibition Details';
-        const PARENT_POST_TYPE  = 'hacc_venue';
+        const POST_TYPE         = 'hacc_workshop';
+        const POST_TYPE_NAME    = 'Workshop';
+        const SAVENONCE         = 'hacc_workshop_save_nonce';
+        const METABOX_TITLE     = 'Workshop Details';
+        const PARENT_POST_TYPE  = 'hacc_programme';
+        const VALIDATION_ERRORS = 'hacc_workshop_errors';
         
         const START_DATE        = 'hacc_StartDate';
-        const END_DATE          = 'hacc_EndDate';        
+        const START_TIME        = 'hacc_StartTime';
+        const END_DATE          = 'hacc_EndDate';
+        const END_TIME          = 'hacc_EndTime';
+        
+        const PUBLIC_PRICE      = 'hacc_public_price';
+        const MEMBER_PRICE      = 'hacc_member_price';
+        const LEVEL             = 'hacc_level';
+        const NOTES             = 'hacc_notes';
+        const TUTOR             = 'hacc_tutor'; // field
+        const TUTOR_POST_TYPE   = 'hacc_tutor';
+        const VENUE_POST_TYPE   = 'hacc_venue';
+        const VENUE             = 'hacc_venue'; // field
 
 	/**
 	 * The ID of this plugin.
@@ -62,8 +74,8 @@ class Hacc_Exhibition_Manager_Exhibition {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-                om_log('adding shortcode');
-                add_shortcode('hacc-list-exhibitions', array($this, 'hacc_list_exhibitions'));
+
+                add_shortcode('hacc-list-workshops', array($this, 'hacc_list_workshops'));
 	}
         
         public function create_post_type() {
@@ -89,24 +101,24 @@ class Hacc_Exhibition_Manager_Exhibition {
 
             $args = array(
                 'labels'                    => $labels,
-                'public'                    => true,
-                'publicly_queryable'        => true,
-                'exclude_from_search'       => false,
-                'show_in_nav_menus'         =>true,
-                'show_ui'                   => true,
-                'show_in_menu'              => true,
-                'show_in_admin_bar'         => true,
-                'menu_position'             => '6',
-                'menu_icon'                 => 'dashicons-businessman',
-                'can_export'                => true,
-                'delete_with_user'          => false,
-                'hierarchical'              => false,
-                'has_archive'               => true,
-                'query_var'                 => true,
-                'taxonomies'                => array('Category'),
-                'capability_type'           => 'post',
-                'map_meta_cap'              => true,
-                'rewrite'                   => array(
+                 'public'                   => true,
+                 'publicly_queryable'       => true,
+                 'exclude_from_search'      => false,
+                 'show_in_nav_menus'        =>true,
+                 'show_ui'                  => true,
+                 'show_in_menu'             => true,
+                 'show_in_admin_bar'        => true,
+                 'menu_position'            => '6',
+                 'menu_icon'                => 'dashicons-businessman',
+                 'can_export'               => true,
+                 'delete_with_user'         => false,
+                 'hierarchical'             => false,
+                 'has_archive'              => true,
+                 'query_var'                => true,
+                 'capability_type'          => 'post',
+                 'map_meta_cap'             => true,
+                'taxonomies'                => array('category',),
+                 'rewrite'                  => array(
                                 'slug'              => substr(self::POST_TYPE,5),
                                     'with_front'    => true,
                                     'pages'         => true,
@@ -131,7 +143,11 @@ class Hacc_Exhibition_Manager_Exhibition {
         public function get_template($template) {
             
             global $post;
- 
+            
+            if(!isset($post)) {
+                return $template;
+            }
+
             if ($post->post_type !== self::POST_TYPE) {
                 return $template;
             }
@@ -153,7 +169,7 @@ class Hacc_Exhibition_Manager_Exhibition {
             );
         }
         /**
-         * Displays Exhibition Metabox.
+         * Displays Class Metabox.
          * @param type $post
          */
         function meta_callback($post) {
@@ -161,7 +177,7 @@ class Hacc_Exhibition_Manager_Exhibition {
             // get post metadata
             wp_nonce_field(basename(__FILE__),  self::SAVENONCE);
 
-            require_once plugin_dir_path( __FILE__ ) . 'partials/hacc-exhibition-metabox.php';
+            require_once plugin_dir_path( __FILE__ ) . 'metaboxes/hacc-workshop-metabox.php';
  
             wp_reset_postdata(); 
             
@@ -172,8 +188,7 @@ class Hacc_Exhibition_Manager_Exhibition {
          */
         
         function save_meta_data($post_id) {
-            
-                       
+ 
             $is_autosave = wp_is_post_autosave($post_id);
             $is_revision = wp_is_post_revision($post_id);
             $is_valid_nonce = false;
@@ -186,8 +201,55 @@ class Hacc_Exhibition_Manager_Exhibition {
             if (!$is_valid_nonce || $is_autosave || $is_revision) {
                 return;
             }
+            om_log(__FUNCTION__);
+            om_log($this->isDataValid($post_id));
+            if ($this->isDataValid($post_id) ) { 
+                $this->save_class( $post_id) ;
+            }
             
-            // link exhibition to venue/gallery. 
+            
+        }
+        
+        /**
+         * Validate metabox data
+         * @param $post_id The Id of the post being validated.
+         * @return boolean. True there are no errors, False there are errors.
+         */
+        
+        function isDataValid($post_id) {
+            $validated = true;
+            if (isset($_POST[self::PUBLIC_PRICE])) {
+                $public_price = sanitize_text_field($_POST[self::PUBLIC_PRICE]);
+                if ( !is_numeric($public_price)) {
+                    add_settings_error('hacc-class-public-price-message','hacc-class-validate-message',
+                        esc_attr('Public Price is not numeric'), 'error'
+                        );
+                    $vaidated = false;
+                }
+            }
+            if (isset($_POST[self::MEMBER_PRICE])) {
+                $member_price = sanitize_text_field($_POST[self::MEMBER_PRICE]);
+                if ( !is_numeric($member_price)) {
+                    add_settings_error('hacc-class-member-price-message','hacc-class-validate-message',
+                        esc_attr('Member Price is not numeric'), 'error'
+                        );
+                    $vaidated = false;
+                }
+            }
+            if (!$validated) {
+                set_transient( self::VALIDATION_ERRORS , get_settings_errors(), 30);
+                add_action( 'admin_notices', array(this, 'workshop_admin_notices'));
+            }
+            return $validated ;
+        }
+        
+        /**
+         * save the class post type data.
+         * @param type $post_id
+         */
+        
+        function save_class( $post_id) {
+            
             
             if (isset($_POST[self::PARENT_POST_TYPE])) {
                                 
@@ -197,26 +259,93 @@ class Hacc_Exhibition_Manager_Exhibition {
                 );
                 // unhook , post and rehook function so it doesn't loop infinitely
                 // see Wordpress codex wp_update_post 
-                remove_action('save_post', array($this,'save_meta_data'),20);
+                remove_action('save_post_hacc_workshop', array($this,'save_meta_data'),20);
                 wp_update_post( $args );
-                add_action('save_post', array($this,'save_meta_data'),20);
+                add_action('save_post_hacc_workshop', array($this,'save_meta_data'),20);
                 
                
             }
             
+            if (isset($_POST[self::TUTOR])) {
+                $tutor = sanitize_text_field($_POST[self::TUTOR]);
+                update_post_meta($post_id, self::TUTOR, $tutor);
+            }
+            
+            if (isset($_POST[self::VENUE])) {
+                $venue = sanitize_text_field($_POST[self::VENUE]);
+                update_post_meta($post_id, self::VENUE, $venue);
+            }
+            
             if (isset($_POST[self::START_DATE])) {
-                $time = strtotime(sanitize_text_field($_POST[self::START_DATE]));
-                update_post_meta($post_id, self::START_DATE, $time);
+                $date = new DateTime(sanitize_text_field($_POST[self::START_DATE]));
+                update_post_meta($post_id, self::START_DATE, $date->format('Y-m-d'));
             }
             
             if (isset($_POST[self::END_DATE])) {
-                $time = strtotime(sanitize_text_field($_POST[self::END_DATE]));
-                update_post_meta($post_id, self::END_DATE, $time);
-            }
+                
+                $date = new DateTime(sanitize_text_field($_POST[self::END_DATE]));
+                update_post_meta($post_id, self::END_DATE, $date->format('Y-m-d'));
             }
             
+            if (isset($_POST[self::START_TIME])) {
+                $time = sanitize_text_field($_POST[self::START_TIME]);
+                update_post_meta($post_id, self::START_TIME, $time);
+            }
+            
+            if (isset($_POST[self::END_TIME])) {
+                $time = sanitize_text_field($_POST[self::END_TIME]);
+                update_post_meta($post_id, self::END_TIME, $time);
+            }
+            
+            if (isset($_POST[self::PUBLIC_PRICE])) {
+                $public_price = floatval(sanitize_text_field($_POST[self::PUBLIC_PRICE]));
+                update_post_meta($post_id, self::PUBLIC_PRICE, $public_price);
+            }
+            
+            if (isset($_POST[self::MEMBER_PRICE])) {
+                $member_price = floatval(sanitize_text_field($_POST[self::MEMBER_PRICE]));
+                update_post_meta($post_id, self::MEMBER_PRICE, $member_price);
+            }
+            
+            if (isset($_POST[self::LEVEL])) {
+                $level = sanitize_text_field($_POST[self::LEVEL]);
+                update_post_meta($post_id, self::LEVEL, $level);
+            }
+            
+            if (isset($_POST[self::NOTES])) {
+                $level = sanitize_text_field($_POST[self::NOTES]);
+                update_post_meta($post_id, self::NOTES, $level);
+            }
+            
+        }
+        
+        function workshop_admin_notices() {
+            // if there were no errors then exit 
+            if( !($errors = get_transient(self::VALIDATION_ERRORS))) {
+                return;
+            }
+            
+           // Build list of errors that exist in VALIDATION_ERRORS
+            
+            $message = '<div id="hacc_message" class="error below-h2">,<p><ul>';
+            foreach ($errors as $error) {
+                $message .= '<li>'. $error['message'] . '</li>';
+            }
+            
+            $message .= '</ul></p></div><!--#error -->';
+            
+            // Write message to screen
+            
+            echo $message;
+            
+            // Clear the transient and unhook admin notices so we don't see duplicate messages.
+            
+            delete_transient(self::VALIDATION_ERRORS);
+            remove_action( 'admin_notices', array($this,class_admin_notices));
+        }     
+        
         /**
-        * Exhibitions list shortcode
+        * Classes list shortcode
         * 
         * Shortcode [hacc-list-exhibitions]
         * 
@@ -235,13 +364,13 @@ class Hacc_Exhibition_Manager_Exhibition {
         * 
         */
         
-        function hacc_list_exhibitions ($atts) {
+        function hacc_list_workshops ($atts) {
        
             global $post;
             
             $atts = shortcode_atts( array(
-                'title'                             => 'Up Coming',
-                'no-exhibitions-message'            => 'There are no up and coming exhibitions scheduled',
+                'title'                             => 'Workshops Coming Soon',
+                'no-workshops-message'              => 'There are no workshops scheduled',
                 'count'                             =>  20,
                 'period'                            => 'future',
                 'show-upcomming-if-no-current'      => 'no',
@@ -260,7 +389,8 @@ class Hacc_Exhibition_Manager_Exhibition {
             
             $paged = get_query_var( 'paged') ? get_query_var( 'paged') : 1;
             
-            $now = strtotime(date('Y-m-d h:i:s'));
+            $nowDate = new DateTime('now');
+            $now =  $nowDate->format('Y-m-d');
             
             $post_count = (int)$atts['count'];
                 
@@ -270,7 +400,7 @@ class Hacc_Exhibition_Manager_Exhibition {
                 'post_status'       => 'publish',
                 'posts_per_page'     => $post_count,
                 'meta_key'          => self::START_DATE,
-                'orderby'           => 'meta_value_num',
+                'orderby'           => 'meta_value',
                 'order'             => 'ASC',                
                 'meta_query'        => array(
                     array (
@@ -288,7 +418,7 @@ class Hacc_Exhibition_Manager_Exhibition {
                 'post_status'       => 'publish',
                 'posts_per_page'     => $post_count,
                 'meta_key'          => self::END_DATE,
-                'orderby'           => 'meta_value_num',
+                'orderby'           => 'meta_value',
                 'order'             => 'DESC',
                 'meta_query'        => array(
                     array (
@@ -306,7 +436,7 @@ class Hacc_Exhibition_Manager_Exhibition {
                 'post_status'       => 'publish',
                 'posts_per_page'     => $post_count,
                 'meta_key'          => self::START_DATE,
-                'orderby'           => 'meta_value_num',                
+                'orderby'           => 'meta_value',                
                 'meta_query'        => array(
                     'relation'      => 'AND',
                     array (
@@ -332,7 +462,6 @@ class Hacc_Exhibition_Manager_Exhibition {
             
             $events = new WP_Query($args);
             
-            
             if (!$events->have_posts() && 
                     $atts['period'] == 'present' &&
                     $atts['show-upcomming-if-no-current'] == 'yes') {
@@ -349,7 +478,7 @@ class Hacc_Exhibition_Manager_Exhibition {
             // 
             $formatOddEven = '-odd';
             if ($events->have_posts()) {
-                $html .= '<div class="hacc-exhibitions">';
+                $html .= '<div class="hacc-workshops">';
                 if ($events->have_posts()) {
                     while ($events->have_posts()) {
                         $events->the_post();
@@ -359,13 +488,21 @@ class Hacc_Exhibition_Manager_Exhibition {
 
                         if (!empty($stored_metadata[self::START_DATE])) {
 
-                            $start_date = date($atts['date-format'], $stored_metadata[self::START_DATE][0]);
+                            $start_date = $stored_metadata[self::START_DATE][0];
+                        }
+                        if (!empty($stored_metadata[self::START_TIME])) {
+
+                            $start_time = $stored_metadata[self::START_TIME][0];
                         }
                         if (!empty($stored_metadata[self::END_DATE])) {
-                            $end_date = date($atts['date-format'], $stored_metadata[self::END_DATE][0]);
+                            $end_date = $stored_metadata[self::END_DATE][0];
                         }
-                        // set css class name suffix alternativly to -odd and -even
-                        $html .= '<div class= "hacc-exhibition' . $formatOddEven . '">';
+                        if (!empty($stored_metadata[self::END_TIME])) {
+
+                            $end_time = $stored_metadata[self::END_TIME][0];
+                        }
+                        // set css workshop name suffix alternativly to -odd and -even
+                        $html .= '<div class= "hacc-workshop' . $formatOddEven . '">';
                         if ($formatOddEven == '-odd') {
                             $formatOddEven = '-even';
                         } else {
@@ -374,12 +511,16 @@ class Hacc_Exhibition_Manager_Exhibition {
                         $html .= '<h3>' . esc_html(get_the_title()) . '</h3>';
                         $html .= '<div class="hacc-entry-dates">';
                         if ($atts['show-start-date'] == 'yes') {
-                            $html .='<span class="hacc-entry-label hacc-exhibition-date">'. $atts['start-date-title'] . ' </span>';
-                            $html .= '<span class="hacc-entry-value  hacc-exhibition-date">' . $start_date .' </span>';
+                            $html .='<span class="hacc-entry-label hacc-workshop-date">'. $atts['start-date-title'] . ' </span>';
+                            $html .= '<span class="hacc-entry-value  hacc-workshop-date">' . $start_date .' </span>';
+                            $html .='<span class="hacc-entry-label hacc-workshop-date">'. 'Start Time'. ' </span>';
+                            $html .= '<span class="hacc-entry-value  hacc-workshop-date">' . $start_time .' </span>';
                         }
                         if ($atts['show-end-date'] == 'yes') {
-                            $html .= '<span class="hacc-entry-label  hacc-exhibition-date">'. $atts['end-date-title'] . ' </span>';
-                            $html .= '<span class="hacc-entry-value  hacc-exhibition-date">' . $end_date . ' </span>';
+                            $html .= '<span class="hacc-entry-label  hacc-workshop-date">'. $atts['end-date-title'] . ' </span>';
+                            $html .= '<span class="hacc-entry-value  hacc-workshop-date">' . $end_date . ' </span>';
+                            $html .= '<span class="hacc-entry-label  hacc-workshop-date">'. 'Finish Time'. ' </span>';
+                            $html .= '<span class="hacc-entry-value  hacc-workshop-date">' . $end_time . ' </span>';
                         }
                         $html .= '</div>';
                         // show featured image
@@ -390,18 +531,17 @@ class Hacc_Exhibition_Manager_Exhibition {
                             }
                         }
                         if($atts['include-action-button'] == 'yes') {
-                            $html .= '<p><a href="';
+                            $html .= '<p><a class="hacc-workshop-link" href="';
                             $html .= esc_html(get_the_permalink());
-                            $html .= '"><button class="hacc-item-button" type="button">';
-                            $html .= esc_html($atts['action-button-text']) . '</button></a>';
-                            
+                            $html .= '">';
+                            $html .= esc_html($atts['action-button-text']) . '</a></p>';
                         }
                         $html .= '</div>';
                     }
                 }
                 $html .= '</div>';
             } else {
-                $html .= '<div class="hacc-message">'.$atts['no-exhibitions-message'];
+                $html .= '<div class="hacc-message">'.$atts['no-workshops-message'];
             }
             $html .= '</div>'; // 
             wp_reset_postdata();

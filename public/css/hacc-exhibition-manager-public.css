@@ -41,6 +41,7 @@ A700    #2962FF     White
     height: 1.5em;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
+    text-overflow: ellipsis;
 }
 
 
@@ -69,6 +70,7 @@ A700    #2962FF     White
     background-color: #BBDEFB;
     
 }
+
 
 .hacc-top-overlap {
     margin-top: -15em;
@@ -149,7 +151,91 @@ A700    #2962FF     White
         background: #E91E63; 
         background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #E91E63), color-stop(1, #E91E63));
 }
+/* Vantage Full Width Layout - Adjust Site Width */
 
+body.responsive.layout-full #page-wrapper .full-container {
+max-width: 95%;
+}
 
+/* Fancy widget grid display */
+@media (max-width: 1300px) {
+  
+  body.responsive .hacc-flashycontainer-loop .hacc-flashy-widget-wrapper {
+    width: 30%;
+  }
+}
+@media (max-width: 640px) {
+  
+  body.responsive .hacc-flashycontainer-loop .hacc-flashy-widget-wrapper {
+    width: 45%;
+  }
+}
+@media (max-width: 480px) {
+  
+  body.responsive .hacc-flashycontainer-loop .hacc-flashy-widget-wrapper {
+    float: none;
+    width: 90%;
+  }
+}
+.hacc-flashycontainer-loop {
+  zoom: 1;
+  margin: 0 -20px;
+  
+  
+}
+.hacc-flashycontainer-loop:before {
+  content: '';
+  display: block;
+}
+.hacc-flashycontainer-loop:after {
+  content: '';
+  display: table;
+  clear: both;
+}
+.hacc-flashycontainer-loop .hacc-flashy-widget-wrapper {
+  width: 20%;
+  float: left;
+  clear: none;
+  margin-left: 30px;
+  
+  
+  
+}
 
+.hacc-flashycontainer-loop .clear {
+  clear: both;
+}
+.hacc-flashycontainer-loop .widgettitle {
+    padding-bottom: 0.5em;
+    padding-top: 1em;
+    padding-right: 0.2em;
+    padding-left: 0.2em;
+    font-size: 1.3em;
+    text-align: center;
+    margin-bottom: 0em;
+}
+
+.hacc-widget-container .hacc-widget-sub-title {
+    background-color: #3F51B5;
+    color: #E8EAF6;
+    padding: 1em;
+    margin-top: 0em;
+    font-size: 1.1em;
+    text-align: center;
+    font-style: italic;
+    
+}
+
+.hacc-widget-container .hacc-widget-field {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+
+}
+.hacc-flashycontainer-loop .hacc-flashy-widget-wrapper {
+   
+    margin-bottom: 1.5em;
+    min-width: 300px
+    
+}
 

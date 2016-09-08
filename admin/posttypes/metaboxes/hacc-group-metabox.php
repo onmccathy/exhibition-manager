@@ -15,11 +15,12 @@
  * PARENT_POST_TYPE     - The venue / gallery where the group will meet.
  * VENUE                - The Venue post ID -  we display the venue title which contains the tutor's name
  * START_TIME           - The start time.
- * END_DATE             - End Time
+ * END_DATE             - End Timee
  * DAY_OF_WEEK          - The class fee for the public.
  * FREQUENCY            - Frequency the group meets 'Weekly,Fortnightly,Monthly'.
+ * CONVENOR             - Group Convenor.
+ * CONVENOR_PHONE_NUMBER- Group Convenor Phone Number.
  * 
- * VENUE_POST_TYPE      - The Studio post type.
  *                      
  * 
  *******************************************************************************/
@@ -77,14 +78,14 @@
         <!-- Start Time -->
         <div class="hacc-meta-row">
             <div class="hacc-meta-label">
-                <label for="<?php print_r(self::START_TIME )?>" class="hacc-end-time-label">Start Time</label>
+                <label for="<?php print_r(self::START_TIME )?>" class="hacc-start-time-label">Start Time</label>
             </div>
             <div class="hacc-meta-field">
-                <input type="text" class="hacc-time hacc-timepicker" name="<?php print_r(self::START_TIME)?>" id="<?php print_r(self::START_TIME) ?>"
+                <input class="hacc-time hacc-timepicker" name="<?php print_r(self::START_TIME)?>" id="<?php print_r(self::START_TIME) ?>"
                        value="<?php
                             if(!empty($stored_metadata[self::START_TIME])) {
                                 $time = esc_attr( $stored_metadata[self::START_TIME][0]);
-                                 printf(date('H:i', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('H:i'));
                                 printf($str);
@@ -93,17 +94,16 @@
                           ?>"</input>
             </div>
         </div>
-        <!-- End Time -->
         <div class="hacc-meta-row">
             <div class="hacc-meta-label">
                 <label for="<?php print_r(self::END_TIME )?>" class="hacc-end-time-label">End Time</label>
             </div>
             <div class="hacc-meta-field">
-                <input type="text" class="hacc-time hacc-timepicker" name="<?php print_r(self::END_TIME)?>" id="<?php print_r(self::END_TIME) ?>"
+                <input type="text" class="hacc-time hacc-timepicker" data-enable-time=true data-no-calendar=true name="<?php print_r(self::END_TIME)?>" id="<?php print_r(self::END_TIME) ?>"
                        value="<?php
                             if(!empty($stored_metadata[self::END_TIME])) {
                                 $time = esc_attr( $stored_metadata[self::END_TIME][0]);
-                                 printf(date('H:i', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('H:i'));
                                 printf($str);
@@ -157,6 +157,43 @@
                     print_r($html);
             ?>
                 </div> 
+            </div>
+        </div>
+        <!-- Convener -->
+        <div class="hacc-meta-row">
+            <div class="hacc-meta-label">
+                <label for="<?php print_r(self::CONVENOR )?>" class="hacc-convenor-label">Convenor </label>
+            </div>
+            <div class="hacc-meta-field">
+                <input class="hacc-convenor" name="<?php print_r(self::CONVENOR)?>" id="<?php print_r(self::CONVENOR) ?>"
+                       value="<?php
+                            if(!empty($stored_metadata[self::CONVENOR])) {
+                                $convenor = esc_attr( $stored_metadata[self::CONVENOR][0]);
+                                 printf($convenor);
+                            } else {
+                                $str = esc_attr('');
+                                printf($str);
+                            }
+
+                          ?>"</input>
+            </div>
+        </div>
+        <!-- Convenor Phone Number -->
+        <div class="hacc-meta-row">
+            <div class="hacc-meta-label">
+                <label for="<?php print_r(self::CONVENOR_PHONE_NUMBER )?>" class="hacc-phone-label">Phone: </label>
+            </div>
+            <div class="hacc-meta-field">
+                <input class="hacc-phone" name="<?php print_r(self::CONVENOR_PHONE_NUMBER)?>" id="<?php print_r(self::CONVENOR_PHONE_NUMBER) ?>"
+                       value="<?php
+                            if(!empty($stored_metadata[self::CONVENOR_PHONE_NUMBER])) {
+                                $phone = esc_attr( $stored_metadata[self::CONVENOR_PHONE_NUMBER][0]);
+                                 printf($phone);
+                            } else {
+                                $str = esc_attr('');
+                                printf($str);
+                            }
+                          ?>"</input>
             </div>
         </div>
     </div>

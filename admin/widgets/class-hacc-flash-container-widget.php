@@ -17,7 +17,7 @@ class Hacc_Flashy_Container extends WP_Widget {
 	 */
 	public function __construct() {
 		$widget_ops = array(
-			'classname' => 'Hacc_Flashy_Container',
+			'classname' => 'hacc-flashy-container',
 			'description' => __( 'Flashy Container' ),
 		);
 		$control_ops = array( 'width' => 400, 'height' => 350 );
@@ -54,7 +54,7 @@ class Hacc_Flashy_Container extends WP_Widget {
 		$text = apply_filters( 'widget_text', $widget_text, $instance, $this );
                 
                 $button_title = ! empty( $instance['button_title'] ) ? $instance['button_title'] : 'Find out More';
-                
+                $button_link = ! empty( $instance['button_link'] ) ? $instance['button_link'] : '#';
 		echo $args['before_widget'];
                 echo '<div class="hacc-widget-container">';
 		if ( ! empty( $title ) ) {
@@ -62,7 +62,7 @@ class Hacc_Flashy_Container extends WP_Widget {
 		} ?>
 			<div class="textwidget"><?php echo !empty( $instance['filter'] ) ? wpautop( $text ) : $text; ?></div>
                         
-                        <?php echo '<a href="#"><button class="hacc-action-button" type="button">' . esc_attr($button_title) . '</button></a>'; 
+                <?php echo '<a href="' . $button_link . '"><button class="hacc-action-button" type="button">' . esc_attr($button_title) . '</button></a>'; 
 		echo '</div>';
 		echo $args['after_widget'];
 	}
@@ -88,7 +88,7 @@ class Hacc_Flashy_Container extends WP_Widget {
 		}
 		$instance['filter'] = ! empty( $new_instance['filter'] );
                 $instance['button_title'] = sanitize_text_field( $new_instance['button_title'] );
-                
+                $instance['button_link'] = sanitize_text_field( $new_instance['button_link'] );
 		return $instance;
 	}
 
@@ -110,6 +110,7 @@ class Hacc_Flashy_Container extends WP_Widget {
 		$filter = isset( $instance['filter'] ) ? $instance['filter'] : 0;
 		$title = sanitize_text_field( $instance['title'] );
                 $button_title = sanitize_text_field( $instance['button_title'] );
+                $button_link = sanitize_text_field( $instance['button_link'] );
 		?>
 		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:'); ?></label>
 		<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($title); ?>" /></p>
@@ -120,6 +121,9 @@ class Hacc_Flashy_Container extends WP_Widget {
 		
                 <p><label for="<?php echo $this->get_field_id('button_title'); ?>"><?php _e('Button Title:'); ?></label>
 		<input class="widefat" id="<?php echo esc_attr($this->get_field_id('button_title')); ?>" name="<?php echo $this->get_field_name('button_title'); ?>" type="text" value="<?php echo esc_attr($button_title); ?>" /></p>
+                
+                <p><label for="<?php echo $this->get_field_id('button_link'); ?>"><?php _e('Button Link:'); ?></label>
+		<input class="widefat" id="<?php echo esc_attr($this->get_field_id('button_link')); ?>" name="<?php echo $this->get_field_name('button_link'); ?>" type="text" value="<?php echo esc_url($button_linl); ?>" /></p>
                     
                 <?php
 	}

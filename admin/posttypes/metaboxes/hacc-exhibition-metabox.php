@@ -68,7 +68,7 @@
                        value="<?php
                             if(!empty($stored_metadata[self::START_DATE])) {
                                 $time = esc_attr( $stored_metadata[self::START_DATE][0]);
-                                 printf(date('Y-m-d', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('Y-m-d'));
                                 printf($str);
@@ -87,7 +87,7 @@
                             if(!empty($stored_metadata[self::END_DATE])) {
                                 // We hold dates as time since Jan 1 1970 so convert and display
                                 $time = esc_attr( $stored_metadata[self::END_DATE][0]);
-                                 printf(date('Y-m-d', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('Y-m-d'));
                                 printf($str);

@@ -87,48 +87,68 @@ class Hacc_Exhibition_Manager_Admin {
                 /**
 		 * The Artist Custom post type
 		 */
-		require_once plugin_dir_path( __FILE__) . 'class-hacc-exhibition-manager-artist.php';
+		require_once plugin_dir_path( __FILE__) . 'posttypes/class-hacc-exhibition-manager-artist.php';
         
                 /**
 		 * The Venue Custom post type
 		 */
-		require_once plugin_dir_path(__FILE__) . 'class-hacc-exhibition-manager-venue.php';
+		require_once plugin_dir_path(__FILE__) . 'posttypes/class-hacc-exhibition-manager-venue.php';
                 
                 /**
 		 * The Exhibition Custom post type
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-exhibition-manager-exhibition.php';
+		require_once plugin_dir_path( __FILE__ ) . 'posttypes/class-hacc-exhibition-manager-exhibition.php';
                 
                  /**
 		 * The Tutor Custom post type
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-exhibition-manager-tutor.php';
+		require_once plugin_dir_path( __FILE__ ) . 'posttypes/class-hacc-exhibition-manager-tutor.php';
                 
                  /**
-		 * The class Custom post type
+		 * The Workshop Custom post type
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-exhibition-manager-class.php';
+		require_once plugin_dir_path( __FILE__ ) . 'posttypes/class-hacc-exhibition-manager-workshop.php';
                 
                           
                 /**
 		 * The Programme post type
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-exhibition-manager-programme.php';
+		require_once plugin_dir_path( __FILE__ ) . 'posttypes/class-hacc-exhibition-manager-programme.php';
                 
                 /**
 		 * The Group post type
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-exhibition-manager-group.php';
+		require_once plugin_dir_path( __FILE__ ) . 'posttypes/class-hacc-exhibition-manager-group.php';
+                
+                /**
+		 * The Group post type
+		 */
+		require_once plugin_dir_path( __FILE__ ) . 'posttypes/class-hacc-exhibition-manager-news.php';
                 
                  /**
 		 * The Fancy Widget
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-flash-container-widget.php';
+		require_once plugin_dir_path( __FILE__ ) . 'widgets/class-hacc-flash-container-widget.php';
                 
                 /**
 		 * The Fancy Widget with widget area
 		 */
-		require_once plugin_dir_path( __FILE__ ) . 'class-hacc-flash-insert-widget.php';
+		require_once plugin_dir_path( __FILE__ ) . 'widgets/class-hacc-flash-insert-widget.php';
+                
+                /**
+		 * The displays templated output
+		 */
+		require_once plugin_dir_path( __FILE__ ) . 'widgets/class-hacc-multi-container-widget.php';
+                
+                /**
+		 * The workshop widget
+		 */
+		require_once plugin_dir_path( __FILE__ ) . 'widgets/hacc_workshop-widget.php';
+                
+                /**
+		 * The Group Widget
+		 */
+		require_once plugin_dir_path( __FILE__ ) . 'widgets/hacc_group-widget.php';
         }
         
         
@@ -154,13 +174,13 @@ class Hacc_Exhibition_Manager_Admin {
                 global $pagenow, $typenow;
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/hacc-exhibition-manager-admin.css', array(), $this->version, 'all' );
                
-                if ($typenow == 'hacc_exhibition' || $typenow =='hacc_class' || $typenow =='hacc_programme') {
+                if ($typenow == 'hacc_exhibition' || $typenow =='hacc_workshop' || $typenow =='hacc_programme' || $typenow == 'hacc_news' || $typenow == 'hacc_group' ) {
                     // only load if we are editing an exhibition or adding a new one
                     if ($pagenow == 'post.php' || $pagenow == 'post-new.php') {
                         wp_enqueue_style('hacc-jquery-ui',plugin_dir_url( __FILE__ ) .'css/jquery-ui.css',array(),self::CSS_JS_VERSION);
-                        wp_enqueue_style('hacc-timepicker',plugin_dir_url( __FILE__ ) .'css/jquery.timepicker.min.css',array(),self::CSS_JS_VERSION);
-                        wp_enqueue_script('hacc-date-picker',plugin_dir_url( __FILE__ ) .'js/script-admin-exhibition.js', array('jquery','jquery-ui-datepicker'), self::CSS_JS_VERSION,true);
-                        wp_enqueue_script('hacc-time-picker',plugin_dir_url( __FILE__ ) .'js/jquery.timepicker.min.js', array('jquery'), self::CSS_JS_VERSION,true);
+                        wp_enqueue_style('hacc-date-time-css',plugin_dir_url( __FILE__ ) .'css/flatpickr.min.css',array(),self::CSS_JS_VERSION);
+                        wp_enqueue_script('hacc-date-picker',plugin_dir_url( __FILE__ ) .'js/script-admin-exhibition.js', array('jquery','hacc-time-picker'), self::CSS_JS_VERSION,true);
+                        wp_enqueue_script('hacc-time-picker',plugin_dir_url( __FILE__ ) .'js/flatpickr.min.js', array('jquery'), self::CSS_JS_VERSION,true);
                     }
                 }
         
@@ -193,6 +213,10 @@ class Hacc_Exhibition_Manager_Admin {
 
             register_widget('Hacc_Flashy_Container');
             register_widget('Hacc_Flashy_Insert');
+            register_widget('Hacc_Multi_Container');
+            register_widget('Hacc_Workshop_Widget');
+            register_widget('Hacc_Group_Widget');
+            
             
         }
         

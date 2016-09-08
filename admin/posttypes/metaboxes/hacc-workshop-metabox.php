@@ -21,7 +21,8 @@
  * END_TIME             - End Time
  * PUBLIC_PRICE         - The class fee for the public.
  * MEMBER_PRICE         - The class fee for members.
- * 
+ * LEVEL                - The workshop expected competency level
+ * NOTES                - Any additional notes ie Materials
  * TUTOR_POST_TYPE      - The tutor post type.
  * VENUE_POST_TYPE      - The Studio post type.
  *                      
@@ -163,7 +164,7 @@
                        value="<?php
                             if(!empty($stored_metadata[self::START_DATE])) {
                                 $time = esc_attr( $stored_metadata[self::START_DATE][0]);
-                                 printf(date('Y-m-d', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('Y-m-d'));
                                 printf($str);
@@ -178,11 +179,11 @@
                 <label for="<?php print_r(self::START_TIME )?>" class="hacc-start-time-label">Start Time</label>
             </div>
             <div class="hacc-meta-field">
-                <input type="text" class="hacc-time hacc-timepicker" name="<?php print_r(self::START_TIME)?>" id="<?php print_r(self::START_TIME) ?>"
+                <input class="hacc-time hacc-timepicker" name="<?php print_r(self::START_TIME)?>" id="<?php print_r(self::START_TIME) ?>"
                        value="<?php
                             if(!empty($stored_metadata[self::START_TIME])) {
                                 $time = esc_attr( $stored_metadata[self::START_TIME][0]);
-                                 printf(date('H:i', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('H:i'));
                                 printf($str);
@@ -202,7 +203,7 @@
                             if(!empty($stored_metadata[self::END_DATE])) {
                                 // We hold dates as time since Jan 1 1970 so convert and display
                                 $time = esc_attr( $stored_metadata[self::END_DATE][0]);
-                                 printf(date('Y-m-d', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('Y-m-d'));
                                 printf($str);
@@ -216,16 +217,72 @@
                 <label for="<?php print_r(self::END_TIME )?>" class="hacc-end-time-label">End Time</label>
             </div>
             <div class="hacc-meta-field">
-                <input type="text" class="hacc-time hacc-timepicker" name="<?php print_r(self::END_TIME)?>" id="<?php print_r(self::END_TIME) ?>"
+                <input type="text" class="hacc-time hacc-timepicker" data-enable-time=true data-no-calendar=true name="<?php print_r(self::END_TIME)?>" id="<?php print_r(self::END_TIME) ?>"
                        value="<?php
                             if(!empty($stored_metadata[self::END_TIME])) {
                                 $time = esc_attr( $stored_metadata[self::END_TIME][0]);
-                                 printf(date('H:i', $time));
+                                 printf($time);
                             } else {
                                 $str = esc_attr( date('H:i'));
                                 printf($str);
                             }
 
+                          ?>"</input>
+            </div>
+        </div>
+        <!-- Expected student competency level -->
+        <div class="hacc-meta-row">
+            <div class="hacc-meta-label">
+                <label for="<?php print_r(self::LEVEL )?>" class="hacc-level-label">Level: </label>
+            </div>
+            <div class="hacc-meta-field">
+                <input type="text" class="hacc-level" name="<?php print_r(self::LEVEL)?>" id="<?php print_r(self::LEVEL) ?>"
+                       value="<?php
+                            if(!empty($stored_metadata[self::LEVEL])) {
+                                $level = esc_attr( $stored_metadata[self::LEVEL][0]);
+                                 printf($level);
+                            } else {
+                                $str = '';
+                                printf($str);
+                            }
+
+                          ?>"</input>
+            </div>
+        </div>
+        <!-- Workshop notes -->
+        <div class="hacc-meta-row">
+            <div class="hacc-meta-label">
+                <label for="<?php print_r(self::NOTES )?>" class="hacc-notes-label">Notes: </label>
+            </div>
+            <div class="hacc-meta-field">
+                <input type="text" class="hacc-level" name="<?php print_r(self::NOTES)?>" id="<?php print_r(self::NOTES) ?>"
+                       value="<?php
+                            if(!empty($stored_metadata[self::NOTES])) {
+                                $level = esc_attr( $stored_metadata[self::NOTES][0]);
+                                 printf($level);
+                            } else {
+                                $str = '';
+                                printf($str);
+                            }
+
+                          ?>"</input>
+            </div>
+        </div>
+        
+        <!-- Member Price -->
+        <div class="hacc-meta-row">
+            <div class="hacc-meta-label">
+                <label for="<?php print_r(self::MEMBER_PRICE) ?>" class="hacc-public-price-label">Member Price</label>
+            </div>
+            <div class="hacc-meta-field">
+                <input type="text" class="hacc-money " name="<?php print_r(self::MEMBER_PRICE) ?>" id="<?php print_r(self::MEMBER_PRICE) ?>"
+                       value="<?php
+                            if(!empty($stored_metadata[self::MEMBER_PRICE])) {
+                                 $money = esc_attr( $stored_metadata[self::MEMBER_PRICE][0]);
+                                 echo sprintf("%01.2f", $money);
+                            } else {
+                                 printf('0.00');
+                            }
                           ?>"</input>
             </div>
         </div>
@@ -239,23 +296,6 @@
                        value="<?php
                             if(!empty($stored_metadata[self::PUBLIC_PRICE])) {
                                  $money = esc_attr( $stored_metadata[self::PUBLIC_PRICE][0]);
-                                 echo sprintf("%01.2f", $money);
-                            } else {
-                                 printf('0.00');
-                            }
-                          ?>"</input>
-            </div>
-        </div>
-        <!-- Member Price -->
-        <div class="hacc-meta-row">
-            <div class="hacc-meta-label">
-                <label for="<?php print_r(self::MEMBER_PRICE) ?>" class="hacc-public-price-label">Member Price</label>
-            </div>
-            <div class="hacc-meta-field">
-                <input type="text" class="hacc-money " name="<?php print_r(self::MEMBER_PRICE) ?>" id="<?php print_r(self::MEMBER_PRICE) ?>"
-                       value="<?php
-                            if(!empty($stored_metadata[self::MEMBER_PRICE])) {
-                                 $money = esc_attr( $stored_metadata[self::MEMBER_PRICE][0]);
                                  echo sprintf("%01.2f", $money);
                             } else {
                                  printf('0.00');

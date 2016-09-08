@@ -10,28 +10,18 @@
  */
 
 
-class Hacc_Exhibition_Manager_Class {
+class Hacc_Exhibition_Manager_Exhibition {
     
     /* Declare fields and copnstants */
        
-        const POST_TYPE         = 'hacc_class';
-        const POST_TYPE_NAME    = 'Class';
-        const SAVENONCE         = 'hacc_class_save_nonce';
-        const METABOX_TITLE     = 'Class Details';
-        const PARENT_POST_TYPE  = 'hacc_programme';
-        const VALIDATION_ERRORS = 'hacc_class_errors';
+        const POST_TYPE         = 'hacc_exhibition';
+        const POST_TYPE_NAME    = 'Exhibition';
+        const SAVENONCE         = 'hacc_exhibition_save_nonce';
+        const METABOX_TITLE     = 'Exhibition Details';
+        const PARENT_POST_TYPE  = 'hacc_venue';
         
         const START_DATE        = 'hacc_StartDate';
-        const START_TIME        = 'hacc_StartTime';
-        const END_DATE          = 'hacc_EndDate';
-        const END_TIME          = 'hacc_EndTime';
-        
-        const PUBLIC_PRICE      = 'hacc_public_price';
-        const MEMBER_PRICE      = 'hacc_member_price';
-        const TUTOR             = 'hacc_tutor'; // field
-        const TUTOR_POST_TYPE   = 'hacc_tutor';
-        const VENUE_POST_TYPE   = 'hacc_venue';
-        const VENUE             = 'hacc_venue'; // field
+        const END_DATE          = 'hacc_EndDate';        
 
 	/**
 	 * The ID of this plugin.
@@ -72,8 +62,8 @@ class Hacc_Exhibition_Manager_Class {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-
-                add_shortcode('hacc-list-classes', array($this, 'hacc_list_classes'));
+                
+                add_shortcode('hacc-list-exhibitions', array($this, 'hacc_list_exhibitions'));
 	}
         
         public function create_post_type() {
@@ -99,24 +89,24 @@ class Hacc_Exhibition_Manager_Class {
 
             $args = array(
                 'labels'                    => $labels,
-                 'public'                   => true,
-                 'publicly_queryable'       => true,
-                 'exclude_from_search'      => false,
-                 'show_in_nav_menus'        =>true,
-                 'show_ui'                  => true,
-                 'show_in_menu'             => true,
-                 'show_in_admin_bar'        => true,
-                 'menu_position'            => '6',
-                 'menu_icon'                => 'dashicons-businessman',
-                 'can_export'               => true,
-                 'delete_with_user'         => false,
-                 'hierarchical'             => false,
-                 'has_archive'              => true,
-                 'query_var'                => true,
-                 'capability_type'          => 'post',
-                 'map_meta_cap'             => true,
-                'taxonomies'                => array('category',),
-                 'rewrite'                  => array(
+                'public'                    => true,
+                'publicly_queryable'        => true,
+                'exclude_from_search'       => false,
+                'show_in_nav_menus'         =>true,
+                'show_ui'                   => true,
+                'show_in_menu'              => true,
+                'show_in_admin_bar'         => true,
+                'menu_position'             => '6',
+                'menu_icon'                 => 'dashicons-businessman',
+                'can_export'                => true,
+                'delete_with_user'          => false,
+                'hierarchical'              => false,
+                'has_archive'               => true,
+                'query_var'                 => true,
+                'taxonomies'                => array('Category'),
+                'capability_type'           => 'post',
+                'map_meta_cap'              => true,
+                'rewrite'                   => array(
                                 'slug'              => substr(self::POST_TYPE,5),
                                     'with_front'    => true,
                                     'pages'         => true,
@@ -141,7 +131,11 @@ class Hacc_Exhibition_Manager_Class {
         public function get_template($template) {
             
             global $post;
-
+            
+            if (!isset($post)) {
+                return $template;
+            }
+ 
             if ($post->post_type !== self::POST_TYPE) {
                 return $template;
             }
@@ -163,7 +157,7 @@ class Hacc_Exhibition_Manager_Class {
             );
         }
         /**
-         * Displays Class Metabox.
+         * Displays Exhibition Metabox.
          * @param type $post
          */
         function meta_callback($post) {
@@ -171,7 +165,7 @@ class Hacc_Exhibition_Manager_Class {
             // get post metadata
             wp_nonce_field(basename(__FILE__),  self::SAVENONCE);
 
-            require_once plugin_dir_path( __FILE__ ) . 'partials/hacc-class-metabox.php';
+            require_once plugin_dir_path( __FILE__ ) . 'metaboxes/hacc-exhibition-metabox.php';
  
             wp_reset_postdata(); 
             
@@ -182,7 +176,8 @@ class Hacc_Exhibition_Manager_Class {
          */
         
         function save_meta_data($post_id) {
- 
+            
+                       
             $is_autosave = wp_is_post_autosave($post_id);
             $is_revision = wp_is_post_revision($post_id);
             $is_valid_nonce = false;
@@ -196,53 +191,11 @@ class Hacc_Exhibition_Manager_Class {
                 return;
             }
             
-            if ($this->isDataValid($post_id) ) { 
-                om_log("Valid");
-                $this->save_class( $post_id) ;
-            }
+            // Get time zone option set in admin panel so we can determine local dates and times
+            $timeZoneString = get_option('timezone_string');
+            $timeZone = new DateTimeZone($timeZoneString);
             
-            
-        }
-        
-        /**
-         * Validate metabox data
-         * @param $post_id The Id of the post being validated.
-         * @return boolean. True there are no errors, False there are errors.
-         */
-        
-        function isDataValid($post_id) {
-            $validated = true;
-            if (isset($_POST[self::PUBLIC_PRICE])) {
-                $public_price = sanitize_text_field($_POST[self::PUBLIC_PRICE]);
-                if ( !is_numeric($public_price)) {
-                    add_settings_error('hacc-class-public-price-message','hacc-class-validate-message',
-                        esc_attr('Public Price is not numeric'), 'error'
-                        );
-                    $vaidated = false;
-                }
-            }
-            if (isset($_POST[self::MEMBER_PRICE])) {
-                $member_price = sanitize_text_field($_POST[self::MEMBER_PRICE]);
-                if ( !is_numeric($member_price)) {
-                    add_settings_error('hacc-class-member-price-message','hacc-class-validate-message',
-                        esc_attr('Member Price is not numeric'), 'error'
-                        );
-                    $vaidated = false;
-                }
-            }
-            if (!$validated) {
-                set_transient( self::VALIDATION_ERRORS , get_settings_errors(), 30);
-                add_action( 'admin_notices', array(this, 'class_admin_notices'));
-            }
-            return $validated ;
-        }
-        
-        /**
-         * save the class post type data.
-         * @param type $post_id
-         */
-        
-        function save_class( $post_id) {
+            // link exhibition to venue/gallery. 
             
             if (isset($_POST[self::PARENT_POST_TYPE])) {
                                 
@@ -252,116 +205,70 @@ class Hacc_Exhibition_Manager_Class {
                 );
                 // unhook , post and rehook function so it doesn't loop infinitely
                 // see Wordpress codex wp_update_post 
-                remove_action('save_post_hacc_class', array($this,'save_meta_data'),20);
+                remove_action('save_post', array($this,'save_meta_data'),20);
                 wp_update_post( $args );
-                add_action('save_post_hacc_class', array($this,'save_meta_data'),20);
+                add_action('save_post', array($this,'save_meta_data'),20);
                 
                
             }
             
-            if (isset($_POST[self::TUTOR])) {
-                $tutor = sanitize_text_field($_POST[self::TUTOR]);
-                update_post_meta($post_id, self::TUTOR, $tutor);
-            }
-            
-            if (isset($_POST[self::VENUE])) {
-                $venue = sanitize_text_field($_POST[self::VENUE]);
-                update_post_meta($post_id, self::VENUE, $venue);
-            }
-            
             if (isset($_POST[self::START_DATE])) {
-                $time = strtotime(sanitize_text_field($_POST[self::START_DATE]));
-                update_post_meta($post_id, self::START_DATE, $time);
+                $date = new DateTime(sanitize_text_field($_POST[self::START_DATE]));
+                update_post_meta($post_id, self::START_DATE, $date->format('Y-m-d'));
             }
             
             if (isset($_POST[self::END_DATE])) {
-                $time = strtotime(sanitize_text_field($_POST[self::END_DATE]));
-                update_post_meta($post_id, self::END_DATE, $time);
+                
+                $date = new DateTime(sanitize_text_field($_POST[self::END_DATE]));
+                update_post_meta($post_id, self::END_DATE, $date->format('Y-m-d'));
             }
-            
-            if (isset($_POST[self::START_TIME])) {
-                $time = strtotime(sanitize_text_field($_POST[self::START_TIME]));
-                update_post_meta($post_id, self::START_TIME, $time);
-            }
-            
-            if (isset($_POST[self::END_TIME])) {
-                $time = strtotime(sanitize_text_field($_POST[self::END_TIME]));
-                update_post_meta($post_id, self::END_TIME, $time);
-            }
-            
-            if (isset($_POST[self::PUBLIC_PRICE])) {
-                $public_price = floatval(sanitize_text_field($_POST[self::PUBLIC_PRICE]));
-                update_post_meta($post_id, self::PUBLIC_PRICE, $public_price);
-            }
-            
-            if (isset($_POST[self::MEMBER_PRICE])) {
-                $member_price = floatval(sanitize_text_field($_POST[self::MEMBER_PRICE]));
-                update_post_meta($post_id, self::MEMBER_PRICE, $member_price);
-            }
-            
-            
         }
-        
-        function class_admin_notices() {
-            // if there were no errors then exit 
-            if( !($errors = get_transient(self::VALIDATION_ERRORS))) {
-                return;
-            }
             
-           // Build list of errors that exist in VALIDATION_ERRORS
-            
-            $message = '<div id="hacc_message" class="error below-h2">,<p><ul>';
-            foreach ($errors as $error) {
-                $message .= '<li>'. $error['message'] . '</li>';
-            }
-            
-            $message .= '</ul></p></div><!--#error -->';
-            
-            // Write message to screen
-            
-            echo $message;
-            
-            // Clear the transient and unhook admin notices so we don't see duplicate messages.
-            
-            delete_transient(self::VALIDATION_ERRORS);
-            remove_action( 'admin_notices', array($this,class_admin_notices));
-        }     
-        
         /**
-        * Classes list shortcode
+        * Exhibitions list shortcode
         * 
         * Shortcode [hacc-list-exhibitions]
         * 
         * Parameters:
         * 
-        * 'title'                       => Section Title,
-        * 'no-exhibitions-message'      => Message displayed if there are no exhibitions to list.
-        * 'count'                       => Maximum number of exhibitions read,
-        * 'period'                      => 'future' -  Lists Exhibitions with a start date greater than today's date.
-        *                                  'past'   -  Lists Exhibitions where the end date is less than today's date.
-        *                                  'present -  Lists Exhibitions where the start date is less or equal than today 
+        * 'title'                           => Section Title,
+        * 'no-exhibitions-message'          => Message displayed if there are no exhibitions to list.
+        * 'count'                           => Maximum number of exhibitions read,
+        * 'period'                          => 'future' -  Lists Exhibitions with a start date greater than today's date.
+        *                                      'past'   -  Lists Exhibitions where the end date is less than today's date.
+        *                                      'present -  Lists Exhibitions where the start date is less or equal than today 
         *                                              and the end date is greater than or equal to today
-        * 'show-upcomming-if-no-current'=> 'no'        If there are no exhibitions currently showing display 'no-exhibitions-message' message.
-        *                                  'yes'       Show up and coming.         
-        * 'pagination'                  => 'false'     
+        * 'show-opening-soon-if-no-current' => 'yes'        If there are no exhibitions currently showing display 'no-exhibitions-message' message.
+        *                                         
+        * 'show-title'                      => 'yes'    -  Shows the list title
+        * 'show featured image'             => 'yes'    -  Shows featured image.
+        * 'show start date                  => 'yes'    -  show start date title and startdate value.
+        * 'show end date'                   => 'yes'    -  show end date title and end date value.
+        * 'date-format                      =>  'd-m-Y' -  The date format used to display start date and end date.
+        * 'start-date-title'                => 'Opens'  -  The start date title.
+        * 'end-date-title'                  => 'Closes' -  The end date title.
+        * 'include-action-button            => 'yes'    -  Include an action button that links to the exhibition record.
+        * 'action-button-text               => 'Find Out More'  - The button text.
         * 
         */
         
-        function hacc_list_classes ($atts) {
-       
-            global $post;
+        function hacc_list_exhibitions ($atts) {
             
+            global $post;
+                       
             $atts = shortcode_atts( array(
                 'title'                             => 'Up Coming',
                 'no-exhibitions-message'            => 'There are no up and coming exhibitions scheduled',
                 'count'                             =>  20,
                 'period'                            => 'future',
-                'show-upcomming-if-no-current'      => 'no',
+                'show-opening-soon-if-no-current'   => 'yes',
+                'opening-soon-count'                => 2,
+                'opening-soon-title'                => 'Opening Soon',
                 'show-title'                        => 'yes',
                 'show-featured-image'               => 'yes',
                 'show-start-date'                   => 'yes',
                 'show-end-date'                     => 'yes',
-                'date-format'                       => 'd.m.Y',
+                'date-format'                       => 'Y-m-d',
                 'start-date-title'                  => 'Opens',
                 'end-date-title'                    => 'Closes',
                 'include-action-button'             => 'yes',
@@ -372,9 +279,12 @@ class Hacc_Exhibition_Manager_Class {
             
             $paged = get_query_var( 'paged') ? get_query_var( 'paged') : 1;
             
-            $now = strtotime(date('Y-m-d h:i:s'));
+            
+            $nowDate = new DateTime('now');
+            $now =  $nowDate->format('Y-m-d');
             
             $post_count = (int)$atts['count'];
+            $opening_soon_count = (int)$atts['opening-soon-count'];
                 
             $future_args = array(
                 
@@ -382,7 +292,25 @@ class Hacc_Exhibition_Manager_Class {
                 'post_status'       => 'publish',
                 'posts_per_page'     => $post_count,
                 'meta_key'          => self::START_DATE,
-                'orderby'           => 'meta_value_num',
+                'orderby'           => 'meta_value',
+                'order'             => 'ASC',                
+                'meta_query'        => array(
+                    array (
+                        'key'       =>self::START_DATE,
+                        'value'     => $now,
+                        'compare'   => '>',
+                    ),
+                ),
+                
+            );
+            
+            $opening_soon_args = array(
+                
+                'post_type'         =>self::POST_TYPE,
+                'post_status'       => 'publish',
+                'posts_per_page'     => $opening_soon_count,
+                'meta_key'          => self::START_DATE,
+                'orderby'           => 'meta_value',
                 'order'             => 'ASC',                
                 'meta_query'        => array(
                     array (
@@ -400,7 +328,7 @@ class Hacc_Exhibition_Manager_Class {
                 'post_status'       => 'publish',
                 'posts_per_page'     => $post_count,
                 'meta_key'          => self::END_DATE,
-                'orderby'           => 'meta_value_num',
+                'orderby'           => 'meta_value',
                 'order'             => 'DESC',
                 'meta_query'        => array(
                     array (
@@ -418,7 +346,7 @@ class Hacc_Exhibition_Manager_Class {
                 'post_status'       => 'publish',
                 'posts_per_page'     => $post_count,
                 'meta_key'          => self::START_DATE,
-                'orderby'           => 'meta_value_num',                
+                'orderby'           => 'meta_value',                
                 'meta_query'        => array(
                     'relation'      => 'AND',
                     array (
@@ -444,14 +372,17 @@ class Hacc_Exhibition_Manager_Class {
             
             $events = new WP_Query($args);
             
-            
+            $no_current = '';
             if (!$events->have_posts() && 
                     $atts['period'] == 'present' &&
-                    $atts['show-upcomming-if-no-current'] == 'yes') {
+                    $atts['show-opening-soon-if-no-current'] == 'yes') {
                 wp_reset_postdata();
-                $args = $future_args;
+                $no_current = 'No Exhibitions are currently showing';
+                $args = $opening_soon_args;
+                $atts['title'] = $atts['opening-soon-title'];
                 $events = new WP_Query($args);
             }
+
             $html = '<div class="hacc-container">';
             // if required - show title
             if($atts['show-title'] == 'yes') {
@@ -471,10 +402,10 @@ class Hacc_Exhibition_Manager_Class {
 
                         if (!empty($stored_metadata[self::START_DATE])) {
 
-                            $start_date = date($atts['date-format'], $stored_metadata[self::START_DATE][0]);
+                            $start_date = new DateTime($stored_metadata[self::START_DATE][0]);
                         }
                         if (!empty($stored_metadata[self::END_DATE])) {
-                            $end_date = date($atts['date-format'], $stored_metadata[self::END_DATE][0]);
+                            $end_date = new DateTime($stored_metadata[self::END_DATE][0]);
                         }
                         // set css class name suffix alternativly to -odd and -even
                         $html .= '<div class= "hacc-exhibition' . $formatOddEven . '">';
@@ -487,11 +418,11 @@ class Hacc_Exhibition_Manager_Class {
                         $html .= '<div class="hacc-entry-dates">';
                         if ($atts['show-start-date'] == 'yes') {
                             $html .='<span class="hacc-entry-label hacc-exhibition-date">'. $atts['start-date-title'] . ' </span>';
-                            $html .= '<span class="hacc-entry-value  hacc-exhibition-date">' . $start_date .' </span>';
+                            $html .= '<span class="hacc-entry-value  hacc-exhibition-date">' . $start_date->format($atts['date-format']) .' </span>';
                         }
                         if ($atts['show-end-date'] == 'yes') {
                             $html .= '<span class="hacc-entry-label  hacc-exhibition-date">'. $atts['end-date-title'] . ' </span>';
-                            $html .= '<span class="hacc-entry-value  hacc-exhibition-date">' . $end_date . ' </span>';
+                            $html .= '<span class="hacc-entry-value  hacc-exhibition-date">' . $end_date->format($atts['date-format']) . ' </span>';
                         }
                         $html .= '</div>';
                         // show featured image
@@ -502,10 +433,11 @@ class Hacc_Exhibition_Manager_Class {
                             }
                         }
                         if($atts['include-action-button'] == 'yes') {
-                            $html .= '<p><a class="hacc-exhibition-link" href="';
+                            $html .= '<p><a href="';
                             $html .= esc_html(get_the_permalink());
-                            $html .= '">';
-                            $html .= esc_html($atts['action-button-text']) . '</a></p>';
+                            $html .= '"><button class="hacc-item-button" type="button">';
+                            $html .= esc_html($atts['action-button-text']) . '</button></a>';
+                            
                         }
                         $html .= '</div>';
                     }
@@ -517,5 +449,7 @@ class Hacc_Exhibition_Manager_Class {
             $html .= '</div>'; // 
             wp_reset_postdata();
             return $html;
+       
+            
         }
 }
